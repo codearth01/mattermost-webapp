@@ -3,14 +3,28 @@
 
 import PropTypes from 'prop-types';
 import React from 'react';
+import {getCurrentUserId} from 'mattermost-redux/selectors/entities/users';
+import {getUserTimezone} from 'mattermost-redux/src/selectors/entities/timezone';
+import {getUserCurrentTimezone} from 'mattermost-redux/utils/timezone_utils';
 
+import store from 'stores/redux_store.jsx';
 import * as Utils from 'utils/utils.jsx';
 
 import ManageAutoResponder from 'components/user_settings/notifications/manage_auto_responder.jsx';
 
+import {getBrowserUtcOffset, getUtcOffsetForTimeZone} from '../../../../utils/timezone';
+
 function getNotificationsStateFromProps(props) {
     const user = props.user;
 
+    const state = store.getState();
+    const userId = getCurrentUserId(state);
+    const userTimezone = getUserTimezone(state, userId);
+    const userCurrentTimezone = getUserCurrentTimezone(userTimezone);
+    const timezoneOffset = (userCurrentTimezone.length > 0 ? getUtcOffsetForTimeZone(userCurrentTimezone) : getBrowserUtcOffset()) * 60;
+
+    const from = '2019-08-16';
+    const to = '2019-08-27';
     let autoResponderActive = false;
     let autoResponderMessage = Utils.localizeMessage(
         'user.settings.notifications.autoResponderDefault',
@@ -30,6 +44,9 @@ function getNotificationsStateFromProps(props) {
 
         autoResponderActive,
         autoResponderMessage,
+        from,
+        to,
+        timezoneOffset,
         isSaving: false,
     };
 }
@@ -64,6 +81,10 @@ export default class oooAutoResponder extends React.Component {
                 'Hello, I am out of office and unable to respond to messages.'
             );
         }
+
+        data.from = this.state.from;
+        data.to = this.state.to;
+        data.offset = this.state.timezoneOffset.toString();
 
         this.setState({isSaving: true});
 
