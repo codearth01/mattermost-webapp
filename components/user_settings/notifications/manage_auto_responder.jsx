@@ -31,7 +31,7 @@ export default class ManageAutoResponder extends React.PureComponent {
         this.handleFromChange = this.handleFromChange.bind(this);
         this.handleToChange = this.handleToChange.bind(this);
         this.state = {
-            from: null,
+            from: new Date(),
             isFromChanged: false,
             to: null,
             isToChanged: false,
@@ -69,14 +69,14 @@ export default class ManageAutoResponder extends React.PureComponent {
         this.setState({from});
         this.props.setParentState('fromDate', this.from.getInput().value);
 
-        // this.setState({isFromChanged: true});
+        this.setState({isFromChanged: true});
     }
 
     handleToChange(to) {
         this.setState({to}, this.showFromMonth);
         this.props.setParentState('toDate', this.to.getInput().value);
 
-        // this.setState({isToChanged: true});
+        this.setState({isToChanged: true});
     }
 
     render() {
@@ -256,7 +256,7 @@ export default class ManageAutoResponder extends React.PureComponent {
 
         const fromDatePicker = (
             <div
-                style={{display: 'block'}}
+                style={{display: 'inline-flex'}}
             >
                 <label style={{paddingRight: 10}}>Start Time:</label>
                 <DayPickerInput
@@ -281,15 +281,15 @@ export default class ManageAutoResponder extends React.PureComponent {
                     }}
                     onDayChange={this.handleFromChange}
                 />
-                {this.state.isFromChanged && <div>{fromTimePicker}</div>}
+                <span>{this.state.isFromChanged && <div>{fromTimePicker}</div>}</span>
             </div>
         );
 
         const toDatePicker = (
             <div
-                style={{display: 'inline-flex', paddingTop: '10px'}}
+                style={{display: 'inline-flex', paddingTop: '5px', paddingLeft: '-10px'}}
             >
-                <label style={{paddingRight: 30}}>End Time</label>
+                <label style={{paddingRight: 18}}>End Time:</label>
                 <DayPickerInput
                     ref={(el) => {
                         this.to = el;
