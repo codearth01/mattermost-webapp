@@ -23,8 +23,10 @@ function getNotificationsStateFromProps(props) {
     const userCurrentTimezone = getUserCurrentTimezone(userTimezone);
     const timezoneOffset = (userCurrentTimezone.length > 0 ? getUtcOffsetForTimeZone(userCurrentTimezone) : getBrowserUtcOffset()) * 60;
 
-    const from = '2019-08-16';
-    const to = '2019-08-27';
+    const fromDate = '';
+    const toDate = '';
+    const fromTime = '6:55 PM';
+    const toTime = '6:56 PM';
     let autoResponderActive = false;
     let autoResponderMessage = Utils.localizeMessage(
         'user.settings.notifications.autoResponderDefault',
@@ -44,8 +46,10 @@ function getNotificationsStateFromProps(props) {
 
         autoResponderActive,
         autoResponderMessage,
-        from,
-        to,
+        fromDate,
+        fromTime,
+        toTime,
+        toDate,
         timezoneOffset,
         isSaving: false,
     };
@@ -53,6 +57,7 @@ function getNotificationsStateFromProps(props) {
 
 export default class oooAutoResponder extends React.Component {
     static propTypes = {
+        user: PropTypes.object,
         updateSection: PropTypes.func,
         enableAutoResponder: PropTypes.bool,
         actions: PropTypes.shape({
@@ -82,8 +87,10 @@ export default class oooAutoResponder extends React.Component {
             );
         }
 
-        data.from = this.state.from;
-        data.to = this.state.to;
+        data.fromDate = this.state.fromDate;
+        data.fromTime = this.state.fromTime;
+        data.toDate = this.state.toDate;
+        data.toTime = this.state.toTime;
         data.offset = this.state.timezoneOffset.toString();
 
         this.setState({isSaving: true});
