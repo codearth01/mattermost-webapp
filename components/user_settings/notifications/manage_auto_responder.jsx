@@ -17,6 +17,7 @@ const MESSAGE_MAX_LENGTH = 500;
 export default class ManageAutoResponder extends React.PureComponent {
     static propTypes = {
         isOooStatusDropdown: PropTypes.bool,
+        isOooDatePickerEnabled: PropTypes.bool,
         autoResponderActive: PropTypes.bool.isRequired,
         autoResponderMessage: PropTypes.string.isRequired,
         updateSection: PropTypes.func.isRequired,
@@ -28,18 +29,38 @@ export default class ManageAutoResponder extends React.PureComponent {
 
     constructor(props) {
         super(props);
+
         this.handleFromChange = this.handleFromChange.bind(this);
         this.handleToChange = this.handleToChange.bind(this);
+        const step = 30;
+        var options = [];
+        var options1 = [];
+        var start = '12:00 AM';
+        var end = '12:00 AM';
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+            if (moment(start, 'h:mm A').diff(moment(now, 'h:mm A')) >= 0) {
+                options.push({value: start, label: start});
+            }
+            options1.push({value: start, label: start});
+            start = moment(start, 'h:mm A').add(step, 'minutes').format('h:mm A');
+            const diff = moment(start, 'h:mm A').diff(moment(end, 'h:mm A'));
+            if (diff === 0) {
+                break;
+            }
+        }
         this.state = {
             from: new Date(),
-            isFromChanged: false,
             to: null,
-            isToChanged: false,
+            options: options1,
+            fromTimePickerOptions: options,
+            toTimePickerOptions: options,
         };
     }
 
     static defaultProps = {
         isOooStatusDropdown: false,
+        isOooDatePickerEnabled: false,
     };
 
     handleAutoResponderChecked = (e) => {
@@ -64,19 +85,25 @@ export default class ManageAutoResponder extends React.PureComponent {
         }
     }
 
-    handleFromChange(from) {
-        // Change the from date and focus the "to" input field
-        this.setState({from});
-        this.props.setParentState('fromDate', this.from.getInput().value);
-
-        this.setState({isFromChanged: true});
+    async handleFromChange(from) {
+        this.setState({from}, async () => {
+            this.props.setParentState('fromDate', this.from.getInput().value);
+            const today = new Date();
+            if (!moment(today).isSame(this.from.getInput().value, 'day')) {
+                await this.setState({fromTimePickerOptions: this.state.options});
+            }
+        });
     }
 
-    handleToChange(to) {
-        this.setState({to}, this.showFromMonth);
-        this.props.setParentState('toDate', this.to.getInput().value);
-
-        this.setState({isToChanged: true});
+    async handleToChange(to) {
+        this.setState({to}, async () => {
+            this.showFromMonth();
+            this.props.setParentState('toDate', this.to.getInput().value);
+            const today = new Date();
+            if (!moment(today).isSame(this.to.getInput().value, 'day')) {
+                await this.setState({toTimePickerOptions: this.state.options});
+            }
+        });
     }
 
     render() {
@@ -115,192 +142,107 @@ export default class ManageAutoResponder extends React.PureComponent {
         );
 
         activeToggle = this.props.isOooStatusDropdown ? null : activeToggle;
-        const message = (
-            <div
-                id='autoResponderMessage'
-                key='autoResponderMessage'
-            >
-                <div className='padding-top'>
-                    <AutosizeTextarea
-                        style={{resize: 'none'}}
-                        id='autoResponderMessageInput'
-                        className='form-control'
-                        rows='5'
-                        placeholder={localizeMessage('user.settings.notifications.autoResponderPlaceholder', 'Message')}
-                        value={autoResponderMessage}
-                        maxLength={MESSAGE_MAX_LENGTH}
-                        onChange={this.onMessageChanged}
-                    />
-                    {serverError}
+        let message = null;
+        if (this.props.isOooStatusDropdown) {
+            message = (
+                <div
+                    id='autoResponderMessage'
+                    key='autoResponderMessage'
+                    style={{width: 530}}
+                >
+                    <div className='padding-top'>
+                        <AutosizeTextarea
+                            style={{resize: 'none', width: 530}}
+                            id='autoResponderMessageInput'
+                            className='form-control'
+                            rows='5'
+                            placeholder={localizeMessage('user.settings.notifications.autoResponderPlaceholder', 'Message')}
+                            value={autoResponderMessage}
+                            maxLength={MESSAGE_MAX_LENGTH}
+                            onChange={this.onMessageChanged}
+                        />
+                        {serverError}
+                    </div>
+                    {/* eslint-disable-next-line react/jsx-no-literals */}
+                    <div className='text-muted text-right'>
+                        {localizeMessage('user.settings.notifications.maxSize', 'Max. character limit is ')}{MESSAGE_MAX_LENGTH}
+                    </div>
                 </div>
-                {/* eslint-disable-next-line react/jsx-no-literals */}
-                <div className='text-muted text-right'>
-                    {localizeMessage('user.settings.notifications.maxSize', 'Max. character limit is ')}{MESSAGE_MAX_LENGTH}
+            );
+        } else {
+            message = (
+                <div
+                    id='autoResponderMessage'
+                    key='autoResponderMessage'
+                >
+                    <div className='padding-top'>
+                        <AutosizeTextarea
+                            style={{resize: 'none'}}
+                            id='autoResponderMessageInput'
+                            className='form-control'
+                            rows='5'
+                            placeholder={localizeMessage('user.settings.notifications.autoResponderPlaceholder', 'Message')}
+                            value={autoResponderMessage}
+                            maxLength={MESSAGE_MAX_LENGTH}
+                            onChange={this.onMessageChanged}
+                        />
+                        {serverError}
+                    </div>
+                    {/* eslint-disable-next-line react/jsx-no-literals */}
+                    <div className='text-muted text-right'>
+                        {localizeMessage('user.settings.notifications.maxSize', 'Max. character limit is ')}{MESSAGE_MAX_LENGTH}
+                    </div>
                 </div>
-            </div>
-        );
-
-        const dayPickerStyle = {
-            height: 30,
-            width: 150,
-            borderRadius: 4,
-            borderWidth: 1,
-            borderStyle: 'solid',
-            borderColor: 'rgb(204, 204, 204)',
-        };
-
-        const step = 30;
-        var options = [];
-        var start = '12:00AM';
-        var end = '12:00AM';
-        var now = moment().format('LT');
-        var diff = moment(start, 'h:mmA').diff(moment(end, 'h:mmA'));
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-            if (moment(start, 'h:mmA').diff(moment(now, 'h:mmA')) >= 0) {
-                options.push({value: start, label: start});
-            }
-            start = moment(start, 'h:mmA').add(step, 'minutes').format('h:mmA');
-            diff = moment(start, 'h:mmA').diff(moment(end, 'h:mmA'));
-            if (diff === 0) {
-                break;
-            }
+            );
         }
+
         const {from, to} = this.state;
         const modifiers = {start: from, end: to};
-        const fromTimePicker = (
-            <span>
-                <TimePicker
-                    ref={(el) => {
-                        this.fromTime = el;
-                    }}
-                    options={options}
-                    key={'fromTime'}
-                    submit={this.props.setParentState}
-                />
-            </span>
-        );
 
-        const toTimePicker = (
-            <span>
-                <TimePicker
-                    ref={(el) => {
-                        this.fromTime = el;
-                    }}
-                    options={options}
-                    key={'fromTime'}
-                    submit={this.props.setParentState}
-                />
-            </span>
-        );
-
-        // {' '}{' '}—{' '}
-        // const datePicker = (
-        //     <div style={{display: 'inline-block', textAlign: 'left'}}>
-        //         <div
-        //             style={{display: 'inline-flex'}}
-        //         >
-        //             <DayPickerInput
-        //                 ref={(el) => {
-        //                     this.from = el;
-        //                 }}
-        //                 inputProps={{style: dayPickerStyle}}
-        //                 value={from}
-        //                 placeholder='Start(Optional)'
-        //                 format='LL'
-        //
-        //                 // formatDate={formatDate}
-        //                 // parseDate={parseDate}
-        //                 dayPickerProps={{
-        //                     selectedDays: [from, {from, to}],
-        //                     disabledDays: {after: to},
-        //                     toMonth: to,
-        //                     modifiers,
-        //                     numberOfMonths: 1,
-        //
-        //                     // onDayClick: () => this.to.getInput().focus(),
-        //                 }}
-        //                 onDayChange={this.handleFromChange}
-        //             />
-        //             {this.state.isFromChanged && <div>{fromTimePicker}</div>}
-        //         </div>
-        //         <div
-        //             style={{display: 'inline-flex', padding: '10px'}}
-        //         >
-        //             <DayPickerInput
-        //                 ref={(el) => {
-        //                     this.to = el;
-        //                 }}
-        //                 inputProps={{style: dayPickerStyle}}
-        //                 value={to}
-        //                 placeholder='End(Optional)'
-        //                 format='LL'
-        //
-        //                 // formatDate={formatDate}
-        //                 // parseDate={parseDate}
-        //                 dayPickerProps={{
-        //                     selectedDays: [from, {from, to}],
-        //                     disabledDays: {before: from},
-        //                     modifiers,
-        //                     month: from,
-        //                     fromMonth: from,
-        //                     numberOfMonths: 1,
-        //                     onDayClick: () => this.setState({isFromChanged: true}),
-        //                 }}
-        //                 onDayChange={this.handleToChange}
-        //             />
-        //             {this.state.isToChanged && <div>{toTimePicker}</div>}
-        //         </div>
-        //     </div>
-        // );
-
-        const fromDatePicker = (
-            <div
-                style={{display: 'inline-flex'}}
-            >
-                <label style={{paddingRight: 10}}>Start Time:</label>
+        const fromDatePicker = this.props.isOooDatePickerEnabled && (
+            <div style={{display: 'inline-flex'}}>
+                <label style={{paddingRight: 10, paddingTop: 11}}>Start Time:</label>
                 <DayPickerInput
                     ref={(el) => {
                         this.from = el;
                     }}
                     inputProps={{style: dayPickerStyle}}
                     value={from}
-                    placeholder='Start(Optional)'
+                    placeholder='(Optional)'
                     format='LL'
-
-                    // formatDate={formatDate}
-                    // parseDate={parseDate}
                     dayPickerProps={{
                         selectedDays: [from, {from, to}],
-                        disabledDays: {after: to},
+                        disabledDays: {after: to, before: new Date()},
                         toMonth: to,
                         modifiers,
                         numberOfMonths: 1,
-
-                        // onDayClick: () => this.to.getInput().focus(),
                     }}
                     onDayChange={this.handleFromChange}
                 />
-                <span>{this.state.isFromChanged && <div>{fromTimePicker}</div>}</span>
+                <span style={{paddingLeft: 10}}>
+                    <TimePicker
+                        keyValue={'fromTime'}
+                        defaultValue={now}
+                        options={this.state.fromTimePickerOptions}
+                        submit={this.props.setParentState}
+                    />
+                </span>
             </div>
         );
 
-        const toDatePicker = (
+        const toDatePicker = this.props.isOooDatePickerEnabled && (
             <div
-                style={{display: 'inline-flex', paddingTop: '5px', paddingLeft: '-10px'}}
+                style={{display: 'inline-flex', paddingTop: '10px', paddingLeft: '-10px', paddingBottom: '19px'}}
             >
-                <label style={{paddingRight: 18}}>End Time:</label>
+                <label style={{paddingRight: 18, paddingTop: 10}}>End Time:</label>
                 <DayPickerInput
                     ref={(el) => {
                         this.to = el;
                     }}
                     inputProps={{style: dayPickerStyle}}
                     value={to}
-                    placeholder='End(Optional)'
+                    placeholder='(Optional)'
                     format='LL'
-
-                    // formatDate={formatDate}
-                    // parseDate={parseDate}
                     dayPickerProps={{
                         selectedDays: [from, {from, to}],
                         disabledDays: {before: from},
@@ -308,11 +250,17 @@ export default class ManageAutoResponder extends React.PureComponent {
                         month: from,
                         fromMonth: from,
                         numberOfMonths: 1,
-                        onDayClick: () => this.setState({isFromChanged: true}),
                     }}
                     onDayChange={this.handleToChange}
                 />
-                {this.state.isToChanged && <div>{toTimePicker}</div>}
+                <span style={{paddingLeft: 10}}>
+                    <TimePicker
+                        keyValue={'toTime'}
+                        defaultValue={'11:59 PM'}
+                        options={this.state.toTimePickerOptions}
+                        submit={this.props.setParentState}
+                    />
+                </span>
             </div>
         );
         inputs.push(activeToggle);
@@ -321,8 +269,16 @@ export default class ManageAutoResponder extends React.PureComponent {
             inputs.push(toDatePicker);
             inputs.push(message);
         }
+
+        let style = null;
+        if (this.props.isOooStatusDropdown) {
+            style = {width: 530, textAlign: 'justify'};
+        }
         inputs.push((
-            <div key='autoResponderHint'>
+            <div
+                key='autoResponderHint'
+                style={style}
+            >
                 <br/>
                 <FormattedHTMLMessage
                     id='user.settings.notifications.autoResponderHint'
@@ -344,3 +300,14 @@ export default class ManageAutoResponder extends React.PureComponent {
         );
     }
 }
+
+const dayPickerStyle = {
+    height: 38,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: 'rgb(204, 204, 204)',
+    paddingRight: 10,
+    textAlign: 'center',
+};
+const now = moment().format('LT');

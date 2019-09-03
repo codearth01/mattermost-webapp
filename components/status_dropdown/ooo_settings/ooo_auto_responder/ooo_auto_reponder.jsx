@@ -25,8 +25,8 @@ function getNotificationsStateFromProps(props) {
 
     const fromDate = '';
     const toDate = '';
-    const fromTime = '6:55 PM';
-    const toTime = '6:56 PM';
+    const fromTime = '';
+    const toTime = '';
     let autoResponderActive = false;
     let autoResponderMessage = Utils.localizeMessage(
         'user.settings.notifications.autoResponderDefault',
@@ -59,6 +59,7 @@ export default class oooAutoResponder extends React.Component {
     static propTypes = {
         user: PropTypes.object,
         updateSection: PropTypes.func,
+        enableOutOfOfficeDatePicker: PropTypes.bool,
         enableAutoResponder: PropTypes.bool,
         actions: PropTypes.shape({
             updateMe: PropTypes.func.isRequired,
@@ -137,6 +138,7 @@ export default class oooAutoResponder extends React.Component {
         const autoResponderSection = (
             <div>
                 <ManageAutoResponder
+                    isOooDatePickerEnabled={this.props.enableOutOfOfficeDatePicker}
                     isOooStatusDropdown={true}
                     autoResponderActive={true}
                     autoResponderMessage={this.state.autoResponderMessage}

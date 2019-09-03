@@ -2,12 +2,11 @@
 // See LICENSE.txt for license information.
 import PropTypes from 'prop-types';
 import React from 'react';
-import moment from 'moment';
 import Select from 'react-select';
 
-export default class TimePicker extends React.Component {
+export default class TimePicker extends React.PureComponent {
     static proptypes = {
-        key: PropTypes.string,
+        keyValue: PropTypes.string,
         defaultValue: PropTypes.string,
         submit: PropTypes.func.isRequired,
         options: PropTypes.array.isRequired,
@@ -17,30 +16,19 @@ export default class TimePicker extends React.Component {
         super(props);
         this.onSelectChange = this.onSelectChange.bind(this);
         this.state = {
-            selectedOption: moment().format('LT'),
+            selectedOption: {value: this.props.defaultValue, label: this.props.defaultValue},
         };
+        // eslint-disable-next-line react/prop-types
+        // this.props.submit(this.props.key, this.state.selectedOption.value);
     }
-    onSelectChange(selectedOption) {
-        this.setState({selectedOption});
-
-        // this.props.submit(this.props.key, {selectedOption});
-    }
-
-    renderInput = (props) => {
-        delete props.value;
-        return (
-            <div
-                className='Select-input'
-                style={{display: 'inline-block'}}
-            >
-                <input {...props}/>
-            </div>
-        );
+    async onSelectChange(selectedOption) {
+        this.setState({selectedOption}, async () => {
+            // eslint-disable-next-line react/prop-types
+            await this.props.submit(this.props.keyValue, selectedOption.label);
+        });
     }
 
     render() {
-        // eslint-disable-next-line react/prop-types
-
         return (
             <Select
                 value={this.state.selectedOption}
@@ -55,9 +43,9 @@ export default class TimePicker extends React.Component {
 const customStyles = {
     control: (base) => ({
         ...base,
-        width: '100px',
-        height: '30px',
+        width: '150px',
         minHeight: '10px',
+        textAlign: 'center',
     }),
 };
 
