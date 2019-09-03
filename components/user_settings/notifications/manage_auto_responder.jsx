@@ -201,6 +201,7 @@ export default class ManageAutoResponder extends React.PureComponent {
 
         const fromDatePicker = this.props.isOooDatePickerEnabled && (
             <div style={{display: 'inline-flex'}}>
+                {/* eslint-disable-next-line react/jsx-no-literals */}
                 <label style={{paddingRight: 10, paddingTop: 11}}>Start Time:</label>
                 <DayPickerInput
                     ref={(el) => {
@@ -234,6 +235,7 @@ export default class ManageAutoResponder extends React.PureComponent {
             <div
                 style={{display: 'inline-flex', paddingTop: '10px', paddingLeft: '-10px', paddingBottom: '19px'}}
             >
+                {/* eslint-disable-next-line react/jsx-no-literals */}
                 <label style={{paddingRight: 18, paddingTop: 10}}>End Time:</label>
                 <DayPickerInput
                     ref={(el) => {

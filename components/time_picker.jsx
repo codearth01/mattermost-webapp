@@ -16,10 +16,9 @@ export default class TimePicker extends React.PureComponent {
         super(props);
         this.onSelectChange = this.onSelectChange.bind(this);
         this.state = {
+            // eslint-disable-next-line react/prop-types
             selectedOption: {value: this.props.defaultValue, label: this.props.defaultValue},
         };
-        // eslint-disable-next-line react/prop-types
-        // this.props.submit(this.props.key, this.state.selectedOption.value);
     }
     async onSelectChange(selectedOption) {
         this.setState({selectedOption}, async () => {
@@ -29,12 +28,14 @@ export default class TimePicker extends React.PureComponent {
     }
 
     render() {
+        // eslint-disable-next-line react/prop-types
+        var options = this.props.options;
         return (
             <Select
                 value={this.state.selectedOption}
                 styles={customStyles}
                 onChange={this.onSelectChange}
-                options={this.props.options}
+                options={options}
             />
         );
     }
